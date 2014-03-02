@@ -1,0 +1,65 @@
+.page-header
+  h1 Feeds configuration
+.modal.fade#modFeed(tabindex="-1", role="dialog", aria-labelledby="Edit feed", aria-hidden="true")
+  .modal-dialog
+    .modal-content
+      .modal-header
+        button.close(type="button", data-dismiss="modal", aria-hidden="true") &times;
+        h4#modFeedLbl.modal-title Edit feed
+      .modal-body
+        form(role='form', name='editFeedForm')
+          input(type='hidden')
+          .form-group
+            label(for='editUrl') URL
+            input.form-control#editUrl(type="text", name="editUrl", placeholder='Enter URL', size='60', ng-model="editFeed.url", required) 
+          .form-group
+            label(for='editName', size='30') Name
+            input.form-control#editName(type="text", name="editName", placeholder='Enter name', ng-model="editFeed.name") 
+          .form-group
+            label(for='editTag', size='20') Tags
+            .input-group
+              input.form-control#editTag(type="text", name="editTag", placeholder='Enter tag name')
+              span.input-group-btn
+                button.btn.btn-default(type="button", ng-click='addTag()') Add
+            div
+              p Current tags:
+              p
+                span.label.label-primary(ng-repeat='tag in editFeed.tags') {{tag}} 
+                  a(href='', ng-click='deleteTag($index)')
+                    span.glyphicon.glyphicon-remove
+      .modal-footer
+        button.btn.btn-default(type="button", data-dismiss="modal") Close
+        button.btn.btn-primary(type="button", ng-click='update()') Save
+#form-feed
+  form.form-inline.pull-right(role='form', name='addFeedForm')
+    .form-group
+      label.sr-only(for='addUrl') URL
+      input.input-sm.form-control#addUrl(type="url", name="addUrl", placeholder='Enter URL', size='60', ng-model="addFeed.url", required) 
+    .form-group
+      label.sr-only(for='addName', size='30') Name
+      input.input-sm.form-control#addName(type="text", name="addName", placeholder='Enter Name', ng-model="addFeed.name") 
+    button.input-sm.btn.btn-default(type="submit", ng-click='add()')
+      i.glyphicon.glyphicon-plus
+      |  Add
+  .clear
+#table-feed
+  table.table.table-bordered.table-condensed
+    thead
+      tr
+        th Name
+        th State
+        th Last checked
+    tbody
+      tr(ng-repeat='feed in feeds')
+        td 
+          a(href='{{feed.url}}') {{feed.name}}
+          a(href="", ng-click="dispUpdate($index)", data-toggle="modal", data-target="#modFeed") 
+            i.glyphicon.glyphicon-pencil
+          a(href="/feeds", ng-click="delete($index)") 
+            i.glyphicon.glyphicon-remove
+        td
+          span(ng-class="(feed.state == 'OK' || feed.state == 'New') ? 'label label-success' : 'label label-danger'") {{feed.state}}
+        td 
+          span {{feed.lastChecked | timeago}} ({{feed.lastFetched}} new articles)
+    
+            

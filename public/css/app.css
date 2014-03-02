@@ -1,0 +1,40 @@
+/* app css stylesheet */
+
+#table-feed, #form-feed {
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+.clear {
+  clear: both;
+}
+
+span.label.label-primary a {
+  color: black;
+}
+
+.article-tb > span {
+  border-right: 1px solid #ddd;
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+}
+
+.article-tb > span:last-child {
+  border-right: 0px;
+  padding-right: 0;
+}
+
+.article-read {
+  color: #ddd; 
+}
+
+.menu-item.hidden-xs {
+    margin-left: 0.25em;
+    display: inline-block !important;
+}
+
+@media (max-width: 767px) {
+.menu-item.hidden-xs {
+  display: none!important;
+ }
+}

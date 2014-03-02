@@ -1,0 +1,37 @@
+extends layout
+
+block body
+  .container(ng-controller='AppCtrl')
+    .row
+      .col-xs-2#menu
+        ul.nav.nav-pills.nav-stacked#sidebar
+          li
+            a(href="articles/unread")
+              i.glyphicon.glyphicon-file
+              span.menu-item.hidden-xs unread
+          li
+            a(href="articles/read")
+              i.glyphicon.glyphicon-folder-close
+              span.menu-item.hidden-xs read
+          li
+            a(href="articles/starred")
+              i.glyphicon.glyphicon-star
+              span.menu-item.hidden-xs starred
+          li
+            a(href="feeds")
+              i.glyphicon.glyphicon-wrench
+              span.menu-item.hidden-xs config
+      .col-xs-10#view(ng-view)
+
+  script(src='js/lib/angular/angular.js')
+  script(src='js/lib/angular/angular-route.js')
+  script(src="js/lib/angular/angular-sanitize.min.js")
+  script(src='js/app.js')
+  script(src='js/services.js')
+  script(src='js/controllers.js')
+  script(src='js/filters.js')
+  script(src='js/directives.js')
+  script(src='js/lib/jquery/jquery-2.0.3.min.js')
+  script(src='js/lib/jquery/jquery.timeago.js')
+  script(src='bootstrap/js/bootstrap.min.js')
+  script(src='js/lib/affix.js')
