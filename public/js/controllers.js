@@ -12,11 +12,9 @@ function AppCtrl($scope, $http) {
   });
 }
 
-function ArticlesCtrl($scope, $http, $routeParams) {
-  var type = $routeParams.typeid;
-  if (!( type == 'unread' || type == 'read' || type == 'starred' )) type = 'unread';
-  var articlesUrl = '/api/articles/' + type;
-  
+function ArticlesCtrl($scope, $http, $route) {
+  $scope.type = $route.current.type;
+  var articlesUrl = '/api/articles/' + $scope.type;
   
   $http({method: 'GET', url: articlesUrl}).
   success(function(data, status, headers, config) {
@@ -52,6 +50,10 @@ function ArticlesCtrl($scope, $http, $routeParams) {
       $scope.read(id);
   }
   
+  $scope.ensureReadAll = function(id) {
+    $scope.articles.forEach(function(article, id) { $scope.ensureRead(id); });
+  }
+  
   $scope.star = function(id) {
     $scope.articles[id].starred = !$scope.articles[id].starred;
     $scope.update(id);
@@ -72,6 +74,10 @@ function ArticlesCtrl($scope, $http, $routeParams) {
         $scope.articles = []
       });
     });
+  }
+  
+  $scope.test = function() {
+    console.log($scope.search.feed); 
   }
 }
 

@@ -1,32 +1,24 @@
 .page-header
-  h1 Articles 
+  h1 {{type | capitalize}} articles 
 #form-feed
-  form.form-inline(role='form', name='searchForm')
-    .row
-      .col-xs-4.col-xs-offset-3
-        .form-group
-          label.sr-only(for='text') Text
-          .input-group
-            input.input-sm.form-control#search-text(type="text", name="searchText", placeholder='Enter Text', size='40', ng-model="search.text") 
-            span.input-group-btn
-              button.input-sm.btn.btn-primary(type="button")
-                i.glyphicon.glyphicon-search
-                |  Search
-      .col-xs-3
-        .form-group
-          select.input-sm.form-control#search-feed(name="searchFeed")
-            option All
-            option(ng-repeat='feed in feeds') {{feed.name}}
-          button.btn.input-sm.btn-primary(type="button")
-            i.glyphicon.glyphicon-filter
-            |  Filter
+  form.form-horizontal(role='form', name='searchForm')
+    .form-group
       .col-xs-2
-        button.input-sm.btn.btn-primary.pull-right(type="button", ng-click='refresh()')
-          i.glyphicon.glyphicon-refresh
-          |  Refresh
+        select.input-sm.form-control#search-feed(name="searchFeed", ng-model="search.feed", ng-options='feed.name for feed in feeds')
+          option(value="") -- select feed --
+      .col-xs-4
+        input.input-sm.form-control#search-text(type="text", name="searchText", placeholder='Enter Text', size='40', ng-model="search.text") 
+      .col-xs-3.col-xs-offset-3
+        .btn-group.btn-group-sm.pull-right
+          button.btn.btn-primary(type="button", ng-click='refresh()')
+            i.glyphicon.glyphicon-refresh
+            |  Refresh
+          button.btn.btn-primary(type="button", ng-click='ensureReadAll()')
+            i.glyphicon.glyphicon-folder-open
+            |  Read all
 p(ng-show='articles.length == 0') No such articles.
 .panel-group#accArticles
-  .panel.panel-default(ng-repeat='article in articles')
+  .panel.panel-default(ng-repeat='article in articles | filter:search.text | feedSelected:search.feed')
     .panel-heading(ng-mouseenter='ensureRead($index)')
       h4(ng-class="(article.read == true) ? 'panel-title article-read' : 'panel-title'")
         a(data-toggle='collapse', data-parent='#accArticles', href="#article-{{$index}}", ng-click='ensureRead($index)', onclick='return false;') {{article.title}}
