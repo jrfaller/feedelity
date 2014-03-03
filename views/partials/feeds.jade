@@ -60,6 +60,8 @@
         td
           span(ng-class="(feed.state == 'OK' || feed.state == 'New') ? 'label label-success' : 'label label-danger'") {{feed.state}}
         td 
-          span {{feed.lastChecked | timeago}} ({{feed.lastFetched}} new articles)
+          span {{feed.lastChecked | timeago}}
+          | 
+          span.badge {{feed.lastFetched}}
     
             

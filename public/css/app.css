@@ -28,6 +28,14 @@ span.label.label-primary a {
   color: #ddd; 
 }
 
+a.selected {
+  color: black; 
+}
+
+a.unselected {
+  color: #ddd; 
+}
+
 .menu-item.hidden-xs {
     margin-left: 0.25em;
     display: inline-block !important;

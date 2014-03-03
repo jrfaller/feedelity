@@ -2,7 +2,7 @@
 
 /* Controllers */
 
-function AppCtrl($scope, $http) {
+function FeedelityCtrl($scope, $http) {
   $http({method: 'GET', url: '/api/feeds'}).
   success(function(data, status, headers, config) {
     $scope.feeds = data;

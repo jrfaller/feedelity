@@ -1,5 +1,7 @@
 .page-header
   h1 {{type | capitalize}} articles 
+    small 
+      span.badge {{articles.length}}
 #form-feed
   form.form-horizontal(role='form', name='searchForm')
     .form-group
@@ -25,14 +27,16 @@ p(ng-show='articles.length == 0') No such articles.
         small.pull-right.article-tb
           span {{article.date | timeago}}
           span
-            span.label.label-primary {{article._feed[0].name}}
+            span.label.label-info {{article._feed[0].name}}
           span
             a(href="{{article.link}}", target='new')
-              span.glyphicon.glyphicon-globe
+              i.glyphicon.glyphicon-globe
           span
-            a.glyphicon.glyphicon-eye-open(ng-click="read($index)")
+            a(href="", ng-click="read($index)", ng-class="(article.read == false) ? 'selected' : 'unselected'")
+              i.glyphicon.glyphicon-eye-open
           span
-            a(ng-click="star($index)", ng-class="(article.starred == true) ? 'glyphicon glyphicon-star' : 'glyphicon glyphicon-star-empty'")
+            a(href="", ng-click="star($index)", ng-class="(article.starred == true) ? 'selected' : 'unselected'")
+              i(ng-class="(article.starred == true) ? 'glyphicon glyphicon-star' : 'glyphicon glyphicon-star-empty'")
     .panel-collapse.collapse(id="article-{{$index}}")
       .panel-body
         div(ng-bind-html="article.summary")
