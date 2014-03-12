@@ -5,12 +5,12 @@
 #form-feed
   form.form-horizontal(role='form', name='searchForm')
     .form-group
-      .col-xs-2
+      .col-xs-2.hidden-xs
         select.input-sm.form-control#search-feed(name="searchFeed", ng-model="search.feed", ng-options='feed.name for feed in feeds')
           option(value="") -- select feed --
-      .col-xs-4
-        input.input-sm.form-control#search-text(type="text", name="searchText", placeholder='Enter Text', size='40', ng-model="search.text") 
-      .col-xs-3.col-xs-offset-3
+      .col-xs-3.hidden-xs
+        input.input-sm.form-control#search-text(type="text", name="searchText", placeholder='Enter Text', size='30', ng-model="search.text") 
+      .col-xs-7
         .btn-group.btn-group-sm.pull-right
           button.btn.btn-primary(type="button", ng-click='refresh()')
             i.glyphicon.glyphicon-refresh
@@ -21,7 +21,7 @@
 p(ng-show='articles.length == 0') No such articles.
 .panel-group#accArticles
   .panel.panel-default(ng-repeat='article in articles | filter:search.text | feedSelected:search.feed')
-    .panel-heading(ng-mouseenter='ensureRead($index)')
+    .panel-heading(ng-click='ensureRead($index)')
       h4(ng-class="(article.read == true) ? 'panel-title article-read' : 'panel-title'")
         a(data-toggle='collapse', data-parent='#accArticles', href="#article-{{$index}}", ng-click='ensureRead($index)', onclick='return false;') {{article.title}}
         small.pull-right.article-tb

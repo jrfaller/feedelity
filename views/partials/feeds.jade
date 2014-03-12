@@ -12,6 +12,7 @@
           .form-group
             label(for='editUrl') URL
             input.form-control#editUrl(type="text", name="editUrl", placeholder='Enter URL', size='60', ng-model="editFeed.url", required) 
+          | &nbsp;
           .form-group
             label(for='editName', size='30') Name
             input.form-control#editName(type="text", name="editName", placeholder='Enter name', ng-model="editFeed.name") 
@@ -30,7 +31,7 @@
       .modal-footer
         button.btn.btn-default(type="button", data-dismiss="modal") Close
         button.btn.btn-primary(type="button", ng-click='update()') Save
-#form-feed
+#form-feed.hidden-xs
   form.form-inline.pull-right(role='form', name='addFeedForm')
     .form-group
       label.sr-only(for='addUrl') URL
@@ -43,7 +44,7 @@
       |  Add
   .clear
 #table-feed
-  table.table.table-bordered.table-condensed
+  table.table.table-condensed.table-striped
     thead
       tr
         th Name

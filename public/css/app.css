@@ -46,3 +46,7 @@ a.unselected {
   display: none!important;
  }
 }
+
+.form-inline > * {
+   margin:0px 3px;
+}

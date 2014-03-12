@@ -3,7 +3,7 @@ var request = require('request'),
   async = require('async')
   mongoose = require('mongoose'),
   Q = require('q'),
-	conf = require('../config.json');
+  conf = require('../config.json');
 
 exports.hasRights = function(req, res) {
 	return req.password == conf.password;
@@ -115,51 +115,51 @@ exports.updateFeed = function(req, res) {
 }
 
 function refreshArticles(feed, callBack) {
-	var articles = [];
-	var feedMeta;
+  var articles = [];
+  var feedMeta;
 	
-	var req = request(feed.url);
-	var feedParser = new FeedParser();
-	req.on('error', function (error) { callBack(error); });
-	req.on('response', function (res) {
-		var stream = this;
-		if (res.statusCode != 200) callback(new Error('Bad status code'));
-		stream.pipe(feedParser);
-	});
-	feedParser.on('error', function(error) { callBack(error); });
+  var req = request(feed.url);
+  var feedParser = new FeedParser();
+  req.on('error', function (error) { callBack(error); });
+  req.on('response', function (res) {
+    var stream = this;
+    if (res.statusCode != 200) callback(new Error('Bad status code'));
+    stream.pipe(feedParser);
+  });
+  feedParser.on('error', function(error) { callBack(error); });
   feedParser.on('meta' , function(meta) { feedMeta = this.meta; });
-	feedParser.on('readable', function() {
-		var stream = this;
-		var item
-		while (item = stream.read()) {
-			var candidate = extractArticle(item, feed);
-			if (checkArticle(candidate)) articles.push(candidate);
-		}
-	});
-	feedParser.on('end', function() {
-      var guids = articles.map(function(article) { return article.guid; });
-      Article.find({_feed: feed._id}).where('guid').in(guids).exec().then(function(articles) { 
-        var existing = articles.map(function(article) { return article.guid; });
-        var added = [];
-        for (var i = 0; i < fArticles.length; i++) {
-          var cur = fArticles[i];
-          if (existing.indexOf(cur.guid) == -1) added.push(cur);
-        }
-        Article.create(added, function(err) {
-          Feed.findOneAndUpdate({_id: feed._id}, {lastChecked: new Date(), lastFetched: added.length, state: 'OK'} ).exec().then(
-            function(feed) { callBack(null, {_feed: feed._id, numAdded: added.length}); }
-          );
-        });
+  feedParser.on('readable', function() {
+    var stream = this;
+    var item
+    while (item = stream.read()) {
+      var candidate = extractArticle(item, feed);
+      if (checkArticle(candidate)) articles.push(candidate);
+    }
+  });
+  feedParser.on('end', function() {
+    var guids = articles.map(function(article) { return article.guid; });
+    Article.find({_feed: feed._id}).where('guid').in(guids).exec().then(function(existingArticles) { 
+      var existingGuids = existingArticles.map(function(article) { return article.guid; });
+      var newArticles = [];
+      for (var i = 0; i < articles.length; i++) {
+        var cur = articles[i];
+        if (existingGuids.indexOf(cur.guid) == -1) newArticles.push(cur);
+      }
+      Article.create(newArticles, function(err) {
+        Feed.findOneAndUpdate({_id: feed._id}, {lastChecked: new Date(), lastFetched: newArticles.length, state: 'OK'} ).exec().then(
+          function(feed) { callBack(null, {_feed: feed._id, numAdded: newArticles.length});}
+        );
       });
     });
+  });
 }
 
 function checkArticle(article) {
-	if (article.date == null) return false;
-	else if (monthsDiff(article.date, new Date()) > conf.activePeriod) return false;
-	else if (article.title == undefined) return false;
-	else if (article.url == undefined) return false;
-	else return true;
+  if (article.date == undefined) return false;
+  else if (monthsDiff(article.date, new Date()) > conf.activePeriod) return false;
+  else if (article.title == undefined) return false;
+  else if (article.link == undefined) return false;
+  else return true;
 }
 
 function compareArticles(a1, a2) {
