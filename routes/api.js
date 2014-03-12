@@ -2,7 +2,12 @@ var request = require('request'),
   FeedParser = require('feedparser'),
   async = require('async')
   mongoose = require('mongoose'),
-  Q = require('q');
+  Q = require('q'),
+	conf = require('../config.json');
+
+exports.hasRights = function(req, res) {
+	return req.password == conf.password;
+}
 
 mongoose.connect('mongodb://localhost/feedelity');
 
@@ -110,8 +115,8 @@ exports.updateFeed = function(req, res) {
 }
 
 function refreshArticles(feed, callBack) {
-	var fArticles = [];
-	var fMeta;
+	var articles = [];
+	var feedMeta;
 	
 	var req = request(feed.url);
 	var feedParser = new FeedParser();
@@ -121,19 +126,18 @@ function refreshArticles(feed, callBack) {
 		if (res.statusCode != 200) callback(new Error('Bad status code'));
 		stream.pipe(feedParser);
 	});
-	feedParser.on('error', function(error) { callBack(error);});
-    feedParser.on('meta' , function(meta) {
-      fMeta = this.meta;
-    });
+	feedParser.on('error', function(error) { callBack(error); });
+  feedParser.on('meta' , function(meta) { feedMeta = this.meta; });
 	feedParser.on('readable', function() {
 		var stream = this;
 		var item
 		while (item = stream.read()) {
-			fArticles.push(extractArticle(item, feed));
+			var candidate = extractArticle(item, feed);
+			if (checkArticle(candidate)) articles.push(candidate);
 		}
 	});
 	feedParser.on('end', function() {
-      var guids = fArticles.map(function(fArticle) { return fArticle.guid; });
+      var guids = articles.map(function(article) { return article.guid; });
       Article.find({_feed: feed._id}).where('guid').in(guids).exec().then(function(articles) { 
         var existing = articles.map(function(article) { return article.guid; });
         var added = [];
@@ -148,6 +152,14 @@ function refreshArticles(feed, callBack) {
         });
       });
     });
+}
+
+function checkArticle(article) {
+	if (article.date == null) return false;
+	else if (monthsDiff(article.date, new Date()) > conf.activePeriod) return false;
+	else if (article.title == undefined) return false;
+	else if (article.url == undefined) return false;
+	else return true;
 }
 
 function compareArticles(a1, a2) {
@@ -167,4 +179,8 @@ function extractArticle(item, feed) {
     read: false,
     starred: false
   });
+}
+	
+function monthsDiff(d1, d2) {
+	return d2.getMonth() -  d1.getMonth() + (12 * (d2.getFullYear() - d1.getFullYear()));	
 }
