@@ -18,7 +18,8 @@ var feedSchema = mongoose.Schema({
   url: String,
   tags: [String],
   lastChecked: Date,
-  lastFetched: Number,  
+  lastFetched: Number, 
+	lastMissed: Number,
   state: String
 });
 
@@ -99,7 +100,8 @@ exports.addFeed = function(req, res) {
     url: req.body.url,
     tags: req.body.tags,
     state: 'New',
-    lastFetched: 0
+    lastFetched: 0,
+    lastMissed: 0
   });
   Feed.create(addFeed).then(function(addFeed) { res.status(200).send(addFeed); });
 }
@@ -117,6 +119,7 @@ exports.updateFeed = function(req, res) {
 function refreshArticles(feed, callBack) {
   var articles = [];
   var feedMeta;
+	var errors = 0;
 	
   var req = request(feed.url);
   var feedParser = new FeedParser();
@@ -134,6 +137,7 @@ function refreshArticles(feed, callBack) {
     while (item = stream.read()) {
       var candidate = extractArticle(item, feed);
       if (checkArticle(candidate)) articles.push(candidate);
+			else errors++;
     }
   });
   feedParser.on('end', function() {
@@ -146,9 +150,14 @@ function refreshArticles(feed, callBack) {
         if (existingGuids.indexOf(cur.guid) == -1) newArticles.push(cur);
       }
       Article.create(newArticles, function(err) {
-        Feed.findOneAndUpdate({_id: feed._id}, {lastChecked: new Date(), lastFetched: newArticles.length, state: 'OK'} ).exec().then(
-          function(feed) { callBack(null, {_feed: feed._id, numAdded: newArticles.length});}
-        );
+				var state = (errors > 0) ? 'Error' : 'OK';
+				var values = {
+					lastChecked: new Date(),
+					lastFetched: newArticles.length,
+					lastMissed: errors,
+					state: state
+				}
+        Feed.findOneAndUpdate({_id: feed._id}, values).exec().then( function(feed) { callBack(null, {_feed: feed._id, numFetched: newArticles.length, numMissed: errors}); });
       });
     });
   });

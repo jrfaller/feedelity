@@ -50,19 +50,21 @@
         th Name
         th State
         th Last checked
+        th Fetched
+        th Errors
     tbody
       tr(ng-repeat='feed in feeds')
         td 
-          a(href='{{feed.url}}') {{feed.name}}
+          a(href='{{feed.url}}', target='new') {{feed.name}}
           a(href="", ng-click="dispUpdate($index)", data-toggle="modal", data-target="#modFeed") 
             i.glyphicon.glyphicon-pencil
           a(href="/feeds", ng-click="delete($index)") 
             i.glyphicon.glyphicon-remove
         td
-          span(ng-class="(feed.state == 'OK' || feed.state == 'New') ? 'label label-success' : 'label label-danger'") {{feed.state}}
+          span.label(ng-class="bpFeedStatus(feed.state)") {{feed.state}}
         td 
           span {{feed.lastChecked | timeago}}
-          | 
+        td 
           span.badge {{feed.lastFetched}}
-    
-            
+        td
+          span.badge {{feed.lastMissed}}

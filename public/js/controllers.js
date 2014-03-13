@@ -3,13 +3,6 @@
 /* Controllers */
 
 function FeedelityCtrl($scope, $http) {
-  $http({method: 'GET', url: '/api/feeds'}).
-  success(function(data, status, headers, config) {
-    $scope.feeds = data;
-  }).
-  error(function(data, status, headers, config) {
-    $scope.feeds = []
-  });
 }
 
 function ArticlesCtrl($scope, $http, $route) {
@@ -131,4 +124,10 @@ function FeedsCtrl($scope, $http) {
     $scope.editFeed.tags.splice(id, 1);
   }
 
+	$scope.bpFeedStatus = function(status) {
+		if (status == 'OK' || status == 'New') return 'label-success';
+		else if (status == 'Error') return 'label-warning';
+		else return 'label-error';
+	}
+	
 }
