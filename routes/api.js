@@ -47,7 +47,16 @@ Article = mongoose.model('Article', articleSchema);
 
 exports.refreshFeeds = function (req, res) {
   Feed.find().exec().then(function(feeds) {
-    async.map(feeds, refreshFeed, function(err, feeds) { res.json(feeds); });
+    async.map(feeds, refreshFeed, function(err, feeds) {
+      if (conf.activePeriod != -1) {
+        var now = new Date();
+        var bound = new Date();
+        bound.setMonth(bound.getMonth() - conf.activePeriod);
+        Article.remove({starred: false}).where('date').lt(bound).exec().then(function(nbArticles) {
+          res.json(feeds);
+        });
+      } else res.json(feeds); 
+    });
   });
 }
 
