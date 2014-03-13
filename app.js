@@ -39,7 +39,7 @@ app.get('/', routes.index);
 app.get('/partial/:name', routes.partial);
 
 // JSON API
-app.get('/api/articles/refresh', api.refreshArticles);
+app.get('/api/refresh', api.refreshFeeds);
 app.get('/api/articles/unread', api.getUnreadArticles);
 app.get('/api/articles/read', api.getReadArticles);
 app.get('/api/articles/starred', api.getStarredArticles);

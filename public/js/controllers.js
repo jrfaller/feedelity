@@ -3,12 +3,26 @@
 /* Controllers */
 
 function FeedelityCtrl($scope, $http) {
+  $http({method: 'GET', url: '/api/feeds'}).
+  success(function(data, status, headers, config) {
+    $scope.feeds = data;
+  }).
+  error(function(data, status, headers, config) {
+    $scope.feeds = []
+  });
+  
+  $scope.refresh = function() {
+    $http({method: 'GET', url: '/api/refresh'}).
+    success(function(data, status, headers, config) { 
+      $scope.feeds = data;
+      $scope.$broadcast('feedsRefreshed');
+    });
+  }
 }
 
 function ArticlesCtrl($scope, $http, $route) {
   $scope.type = $route.current.type;
   var articlesUrl = '/api/articles/' + $scope.type;
-  
   $http({method: 'GET', url: articlesUrl}).
   success(function(data, status, headers, config) {
     $scope.articles = data;
@@ -17,21 +31,17 @@ function ArticlesCtrl($scope, $http, $route) {
     $scope.articles = []
   });
   
-  $http({method: 'GET', url: '/api/feeds'}).
-  success(function(data, status, headers, config) {
-    $scope.feeds = data;
-  }).
-  error(function(data, status, headers, config) {
-    $scope.feeds = []
+  $scope.$on('feedsRefreshed', function() {
+    var articlesUrl = '/api/articles/' + $scope.type;
+    $http({method: 'GET', url: articlesUrl}).
+    success(function(data, status, headers, config) {
+      $scope.articles = data;
+    }).
+    error(function(data, status, headers, config) {
+      $scope.articles = []
+    });
   });
-  
-  $http({method: 'GET', url: '/api/feeds'}).
-  success(function(data, status, headers, config) {
-    $scope.feeds = data;
-  }).
-  error(function(data, status, headers, config) {
-    $scope.feeds = []
-  });
+
   
   $scope.read = function(id) {
     $scope.articles[id].read = !$scope.articles[id].read; 
@@ -55,34 +65,10 @@ function ArticlesCtrl($scope, $http, $route) {
   $scope.update = function(id) {
     $http({method: 'POST', data: $scope.articles[id], url: '/api/articles/' + $scope.articles[id]._id});
   }
-  
-  $scope.refresh = function() {
-    $http({method: 'GET', url: '/api/articles/refresh'}).
-    success(function(data, status, headers, config) {
-      $http({method: 'GET', url: '/api/articles/unread'}).
-      success(function(data, status, headers, config) {
-        $scope.articles = data;
-      }).
-      error(function(data, status, headers, config) {
-        $scope.articles = []
-      });
-    });
-  }
-  
-  $scope.test = function() {
-    console.log($scope.search.feed); 
-  }
+
 }
 
 function FeedsCtrl($scope, $http) {
-  $http({method: 'GET', url: '/api/feeds'}).
-  success(function(data, status, headers, config) {
-    $scope.feeds = data;
-  }).
-  error(function(data, status, headers, config) {
-    $scope.feeds = []
-  });
-  
   $scope.delete = function(id) {
     var delFeed = $scope.feeds[id];
     $http({method: 'DELETE', url: '/api/feeds/' + delFeed._id}).
@@ -126,7 +112,7 @@ function FeedsCtrl($scope, $http) {
 
 	$scope.bpFeedStatus = function(status) {
 		if (status == 'OK' || status == 'New') return 'label-success';
-		else if (status == 'Error') return 'label-warning';
+		else if (status == 'Incomplete') return 'label-warning';
 		else return 'label-error';
 	}
 	

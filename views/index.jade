@@ -6,6 +6,10 @@ block body
       .col-xs-2#menu
         ul.nav.nav-pills.nav-stacked#sidebar
           li
+            a(href='', ng-click='refresh()')
+              i.glyphicon.glyphicon-refresh
+              span.menu-item.hidden-xs refresh
+          li
             a(href="articles/unread")
               i.glyphicon.glyphicon-file
               span.menu-item.hidden-xs unread

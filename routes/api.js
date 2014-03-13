@@ -1,13 +1,18 @@
+// Imports
+
 var request = require('request'),
   FeedParser = require('feedparser'),
   async = require('async')
   mongoose = require('mongoose'),
-  Q = require('q'),
   conf = require('../config.json');
+
+// Security functions
 
 exports.hasRights = function(req, res) {
 	return req.password == conf.password;
 }
+
+// Mongoose functions
 
 mongoose.connect('mongodb://localhost/feedelity');
 
@@ -16,7 +21,6 @@ var db = mongoose.connection;
 var feedSchema = mongoose.Schema({
   name: String,
   url: String,
-  tags: [String],
   lastChecked: Date,
   lastFetched: Number, 
 	lastMissed: Number,
@@ -39,42 +43,12 @@ var articleSchema = mongoose.Schema({
 Feed = mongoose.model('Feed', feedSchema);
 Article = mongoose.model('Article', articleSchema);
 
-exports.getUnreadArticles = function (req, res) {
-  Article.find({read: false}).populate('_feed', 'name tags').exec().then(function(articles) {
-    articles.sort(compareArticles);
-    res.json(articles);
-  });
-}
+// Feeds functions
 
-exports.getReadArticles = function (req, res) {
-  Article.find({read: true}).populate('_feed', 'name tags').exec().then(function(articles) {
-    articles.sort(compareArticles);
-    res.json(articles);
-  });
-}
-
-exports.getStarredArticles = function (req, res) {
-  Article.find({starred: true}).populate('_feed', 'name tags').exec().then(function(articles) {
-    articles.sort(compareArticles);
-    res.json(articles); 
-  });
-}
-
-exports.refreshArticles = function (req, res) {
+exports.refreshFeeds = function (req, res) {
   Feed.find().exec().then(function(feeds) {
-    async.map(feeds, refreshArticles, function(err, results) {
-      res.json(results); 
-    });
+    async.map(feeds, refreshFeed, function(err, feeds) { res.json(feeds); });
   });
-}
-
-exports.updateArticle = function(req, res) {
-  var query = { _id: req.body._id };
-  var update = {
-    starred: req.body.starred,
-    read: req.body.read,
-  }
-  Article.findOneAndUpdate(query, update).exec().then(function(article) { res.status(200).send(article); });
 }
 
 exports.getFeed = function(req,res) {
@@ -95,10 +69,10 @@ exports.delFeed = function(req, res) {
 }
 
 exports.addFeed = function(req, res) {
+  var url = req.body.url;
   addFeed = new Feed({
-    name: req.body.name,
-    url: req.body.url,
-    tags: req.body.tags,
+    name: url,
+    url: url,
     state: 'New',
     lastFetched: 0,
     lastMissed: 0
@@ -111,12 +85,11 @@ exports.updateFeed = function(req, res) {
   var update = {
     name: req.body.name,
     url: req.body.url,
-    tags: req.body.tags
   }
   Feed.findOneAndUpdate(query, update).exec().then(function(feed) { res.status(200).send(feed); });
 }
 
-function refreshArticles(feed, callBack) {
+function refreshFeed(feed, callBack) {
   var articles = [];
   var feedMeta;
 	var errors = 0;
@@ -150,22 +123,54 @@ function refreshArticles(feed, callBack) {
         if (existingGuids.indexOf(cur.guid) == -1) newArticles.push(cur);
       }
       Article.create(newArticles, function(err) {
-				var state = (errors > 0) ? 'Error' : 'OK';
+				var state = (errors > 0) ? 'Incomplete' : 'OK';
 				var values = {
 					lastChecked: new Date(),
 					lastFetched: newArticles.length,
 					lastMissed: errors,
 					state: state
 				}
-        Feed.findOneAndUpdate({_id: feed._id}, values).exec().then( function(feed) { callBack(null, {_feed: feed._id, numFetched: newArticles.length, numMissed: errors}); });
+        Feed.findOneAndUpdate({_id: feed._id}, values).exec().then( function(feed) { callBack(null, feed); });
       });
     });
   });
 }
 
+// Articles functions
+
+exports.getUnreadArticles = function (req, res) {
+  Article.find({read: false}).populate('_feed', 'name').exec().then(function(articles) {
+    articles.sort(compareArticles);
+    res.json(articles);
+  });
+}
+
+exports.getReadArticles = function (req, res) {
+  Article.find({read: true}).populate('_feed', 'name').exec().then(function(articles) {
+    articles.sort(compareArticles);
+    res.json(articles);
+  });
+}
+
+exports.getStarredArticles = function (req, res) {
+  Article.find({starred: true}).populate('_feed', 'name').exec().then(function(articles) {
+    articles.sort(compareArticles);
+    res.json(articles); 
+  });
+}
+
+exports.updateArticle = function(req, res) {
+  var query = { _id: req.body._id };
+  var update = {
+    starred: req.body.starred,
+    read: req.body.read,
+  }
+  Article.findOneAndUpdate(query, update).exec().then(function(article) { res.status(200).send(article); });
+}
+
 function checkArticle(article) {
   if (article.date == undefined) return false;
-  else if (monthsDiff(article.date, new Date()) > conf.activePeriod) return false;
+  else if (conf.activePeriod != -1 && monthsDiff(article.date, new Date()) > conf.activePeriod) return false;
   else if (article.title == undefined) return false;
   else if (article.link == undefined) return false;
   else return true;
@@ -189,7 +194,9 @@ function extractArticle(item, feed) {
     starred: false
   });
 }
-	
+
+// Utility functions
+
 function monthsDiff(d1, d2) {
 	return d2.getMonth() -  d1.getMonth() + (12 * (d2.getFullYear() - d1.getFullYear()));	
 }
