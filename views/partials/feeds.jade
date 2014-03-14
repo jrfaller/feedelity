@@ -36,7 +36,8 @@
         th State
         th Last checked
         th Fetched
-        th Missed
+        th Outdated
+        th Errors
     tbody
       tr(ng-repeat='feed in feeds')
         td 
@@ -50,6 +51,8 @@
         td 
           span {{feed.lastChecked | timeago}}
         td 
-          span.badge {{feed.lastFetched}}
+          span.badge {{feed.lastFetchedNb}}
         td
-          span.badge {{feed.lastMissed}}
+          span.badge {{feed.lastOutdatedNb}}
+        td
+          span.badge {{feed.lastErrorNb}}

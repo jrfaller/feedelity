@@ -22,8 +22,9 @@ var feedSchema = mongoose.Schema({
   name: String,
   url: String,
   lastChecked: Date,
-  lastFetched: Number, 
-	lastMissed: Number,
+  lastFetchedNb: Number, 
+  lastErrorNb: Number,
+  lastOutdatedNb: Number,
   state: String
 });
 
@@ -84,7 +85,8 @@ exports.addFeed = function(req, res) {
     url: url,
     state: 'New',
     lastFetched: 0,
-    lastMissed: 0
+    lastErrors: 0,
+    lastOudated: 0
   });
   Feed.create(addFeed).then(function(addFeed) { res.status(200).send(addFeed); });
 }
@@ -101,8 +103,8 @@ exports.updateFeed = function(req, res) {
 function refreshFeed(feed, callBack) {
   var articles = [];
   var feedMeta;
-	var errors = 0;
-	
+  var errors = 0;
+  var outdated = 0;
   var req = request(feed.url);
   var feedParser = new FeedParser();
   req.on('error', function (error) { callBack(error); });
@@ -118,8 +120,10 @@ function refreshFeed(feed, callBack) {
     var item
     while (item = stream.read()) {
       var candidate = extractArticle(item, feed);
-      if (checkArticle(candidate)) articles.push(candidate);
-			else errors++;
+      if (checkValues(candidate)) {
+        if (checkPeriod(candidate)) articles.push(candidate);  
+        else outdated++;
+      } else errors++;
     }
   });
   feedParser.on('end', function() {
@@ -132,13 +136,14 @@ function refreshFeed(feed, callBack) {
         if (existingGuids.indexOf(cur.guid) == -1) newArticles.push(cur);
       }
       Article.create(newArticles, function(err) {
-				var state = (errors > 0) ? 'Incomplete' : 'OK';
-				var values = {
-					lastChecked: new Date(),
-					lastFetched: newArticles.length,
-					lastMissed: errors,
-					state: state
-				}
+        var state = (errors > 0) ? 'Incomplete' : 'OK';
+        var values = {
+          lastChecked: new Date(),
+          lastFetchedNb: newArticles.length,
+          lastErrorNb: errors,
+          lastOutdatedNb: outdated,
+          state: state
+        };
         Feed.findOneAndUpdate({_id: feed._id}, values).exec().then( function(feed) { callBack(null, feed); });
       });
     });
@@ -177,11 +182,16 @@ exports.updateArticle = function(req, res) {
   Article.findOneAndUpdate(query, update).exec().then(function(article) { res.status(200).send(article); });
 }
 
-function checkArticle(article) {
+function checkValues(article) {
   if (article.date == undefined) return false;
-  else if (conf.activePeriod != -1 && monthsDiff(article.date, new Date()) > conf.activePeriod) return false;
   else if (article.title == undefined) return false;
   else if (article.link == undefined) return false;
+  else return true;
+}
+
+function checkPeriod(article) {
+  if (conf.activePeriod == -1) return true;
+  else if (monthsDiff(article.date, new Date()) > conf.activePeriod) return false;
   else return true;
 }
 
